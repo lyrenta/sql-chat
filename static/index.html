@@ -7,13 +7,36 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Robochat</h1>
+    <div class="main">
+        <div class="messager">
+            <img src="" alt="">
+            <h1>Robochat</h1>
+        </div>
+            <div class="register">
+            <input type="text" id="regUsername" placeholder="Username">
+            <input type="password" id="regPassword" placeholder="Password">
+            <button id="registerBtn">Register</button>
+        </div>
+        <div class="person">
+            <img src="" alt="">
+            <h4>Robochat</h4>
+        </div>
+        <div class="dialog">
+            <div class="messagesFromOtherPerson">
+                <p>hey!</p>
+                <p>wassup?</p>
+            </div>
+            <div class="messagesFromYou">
 
-    <div class="messages">
-        <div class="message1">
-            <p>hi!</p>
+            </div>
+                <div class="sendm">
+                <input type="text">
+                <button>send</button>
+            </div>
         </div>
     </div>
 </body>
+
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
 <script src="script.js"></script>
 </html>
