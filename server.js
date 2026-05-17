@@ -3,8 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require("mysql2");
 
-
-// MYSQL CONNECTION
 const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -12,7 +10,6 @@ const connection = mysql.createConnection({
     database: "chat"
 });
 
-// CONNECT MYSQL
 connection.connect((err) => {
 
     if (err) {
@@ -22,11 +19,8 @@ connection.connect((err) => {
     }
 });
 
-
-// SERVER
 const server = http.createServer((req, res) => {
 
-    // INDEX.HTML
     if (req.url === '/') {
 
         const file = fs.readFileSync(
@@ -38,7 +32,6 @@ const server = http.createServer((req, res) => {
         return res.end(file);
     }
 
-    // STYLE.CSS
     if (req.url === '/style.css') {
 
         const file = fs.readFileSync(
@@ -50,7 +43,6 @@ const server = http.createServer((req, res) => {
         return res.end(file);
     }
 
-    // SCRIPT.JS
     if (req.url === '/script.js') {
 
         const file = fs.readFileSync(
@@ -62,7 +54,6 @@ const server = http.createServer((req, res) => {
         return res.end(file);
     }
 
-    // GET MESSAGES
     if (req.url === "/messages" && req.method === "GET") {
 
         connection.query(
@@ -93,7 +84,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // SEND MESSAGE
     if (req.url === "/send" && req.method === "POST") {
 
         let body = "";
@@ -130,7 +120,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // REGISTER
     if (req.url === "/register" && req.method === "POST") {
 
         let body = "";
@@ -166,14 +155,11 @@ const server = http.createServer((req, res) => {
 
         return;
     }
-
-    // 404
     res.writeHead(404);
 
     res.end("404 Not Found");
 });
 
-// START SERVER
 server.listen(3000, () => {
     console.log("Server running on http://localhost:3000");
 });

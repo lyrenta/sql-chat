@@ -3,7 +3,6 @@ const button = document.querySelector("button");
 const messagesDiv = document.querySelector(".messagesFromYou");
 const socket = io();
 
-// SEND MESSAGE
 button.addEventListener("click", async () => {
 
     const message = input.value;
@@ -26,7 +25,6 @@ button.addEventListener("click", async () => {
     loadMessages();
 });
 
-// LOAD MESSAGES
 async function loadMessages() {
 
     try {
