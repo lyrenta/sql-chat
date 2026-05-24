@@ -17,7 +17,7 @@ connection.connect();
 const server = http.createServer((req, res) => {
     const parsed = url.parse(req.url, true);
 
-    // STATIC FILES
+    // ================= STATIC FILES =================
     if (req.url === "/" || req.url === "/index.html") {
         return sendFile(res, "static/index.html", "text/html");
     }
@@ -30,9 +30,7 @@ const server = http.createServer((req, res) => {
         return sendFile(res, "static/script.js", "text/javascript");
     }
 
-    // =========================
-    // REGISTER
-    // =========================
+    // ================= REGISTER =================
     if (req.url === "/register" && req.method === "POST") {
         return readBody(req, (body) => {
             const { login, password } = JSON.parse(body);
@@ -52,9 +50,7 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // =========================
-    // LOGIN
-    // =========================
+    // ================= LOGIN =================
     if (req.url === "/login" && req.method === "POST") {
         return readBody(req, (body) => {
             const { login, password } = JSON.parse(body);
@@ -75,9 +71,7 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // =========================
-    // USERS
-    // =========================
+    // ================= USERS =================
     if (req.url === "/users") {
         connection.query(
             "SELECT id, login FROM user",
@@ -89,39 +83,32 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // =========================
-    // DIALOGS
-    // =========================
+    // ================= DIALOGS =================
     if (parsed.pathname === "/dialogs") {
-    const userId = parsed.query.userId;
+        const userId = parsed.query.userId;
 
-    connection.query(
-        `
-        SELECT 
-            d.id,
-            d.first_user_id,
-            d.second_user_id,
-            u.id AS user_id,
-            u.login
-        FROM dialog d
-        JOIN user u 
-            ON (u.id = d.first_user_id OR u.id = d.second_user_id)
-        WHERE (d.first_user_id = ? OR d.second_user_id = ?)
-        AND u.id != ?
-        `,
-        [userId, userId, userId],
-        (err, results) => {
-            if (err) return sendJSON(res, { error: err.message });
+        connection.query(
+            `SELECT 
+                d.id,
+                d.first_user_id,
+                d.second_user_id,
+                u.id AS user_id,
+                u.login
+             FROM dialog d
+             JOIN user u 
+                ON (u.id = d.first_user_id OR u.id = d.second_user_id)
+             WHERE (d.first_user_id = ? OR d.second_user_id = ?)
+             AND u.id != ?`,
+            [userId, userId, userId],
+            (err, results) => {
+                if (err) return sendJSON(res, { error: err.message });
+                sendJSON(res, results);
+            }
+        );
+        return;
+    }
 
-            sendJSON(res, results);
-        }
-    );
-    return;
-}
-
-    // =========================
-    // CREATE OR GET DIALOG
-    // =========================
+    // ================= CREATE / GET DIALOG =================
     if (req.url === "/dialog" && req.method === "POST") {
         return readBody(req, (body) => {
             const { user1, user2 } = JSON.parse(body);
@@ -154,30 +141,31 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // =========================
-    // MESSAGES
-    // =========================
+    // ================= MESSAGES =================
     if (parsed.pathname === "/messages") {
-    const dialogId = parsed.query.dialogId;
+        const dialogId = parsed.query.dialogId;
 
-    connection.query(
-        `SELECT m.id, m.content, m.author_id, m.dialog_id, u.login AS author_name
-         FROM message m
-         JOIN user u ON m.author_id = u.id
-         WHERE m.dialog_id = ?
-         ORDER BY m.id ASC`,
-        [dialogId],
-        (err, results) => {
-            if (err) return sendJSON(res, { error: err.message });
-            sendJSON(res, results);
-        }
-    );
-    return;
-}
+        connection.query(
+            `SELECT m.id, m.content, m.author_id, m.dialog_id, u.login AS author_name
+             FROM message m
+             JOIN user u ON m.author_id = u.id
+             WHERE m.dialog_id = ?
+             ORDER BY m.id ASC`,
+            [dialogId],
+            (err, results) => {
+                if (err) return sendJSON(res, { error: err.message });
+                sendJSON(res, results);
+            }
+        );
+        return;
+    }
 
-// =========================
-// SOCKET.IO
-// =========================
+    // ================= 404 =================
+    res.writeHead(404);
+    res.end("Not found");
+});
+
+// ================= SOCKET.IO =================
 const io = new Server(server);
 
 io.on("connection", (socket) => {
@@ -203,9 +191,7 @@ io.on("connection", (socket) => {
     });
 });
 
-// =========================
-// HELPERS
-// =========================
+// ================= HELPERS =================
 function sendFile(res, file, type) {
     const filePath = path.join(__dirname, file);
 
@@ -231,5 +217,6 @@ function readBody(req, cb) {
     req.on("end", () => cb(body));
 }
 
-server.listen(3000, () => console.log("Server running")) });   // socket.io
-// helpers
+server.listen(3000, () =>
+    console.log("Server running on http://localhost:3000")
+);
