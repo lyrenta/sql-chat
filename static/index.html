@@ -7,26 +7,38 @@
 <body>
 
 <div id="auth">
-    <h2>Login / Register</h2>
     <input id="login" placeholder="login">
-    <input id="password" type="password" placeholder="password">
-    <button onclick="register()">Register</button>
+    <input id="password" placeholder="password">
     <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
 </div>
 
-<div id="app" style="display:none;">
-    <div class="sidebar">
-        <h3>Users</h3>
-        <div id="users"></div>
+<div id="app" style="display:none; height:100vh; display:flex;">
+
+    <!-- LEFT SIDEBAR (USERS) -->
+    <div id="sidebar"
+        style="width:220px; border-right:1px solid #333; overflow:auto;">
     </div>
 
-    <div class="chat">
-        <div id="messages"></div>
-        <input id="msgInput" placeholder="message">
-        <button onclick="sendMessage()">Send</button>
+    <!-- CHAT AREA -->
+    <div style="flex:1; display:flex; flex-direction:column;">
+
+        <div id="chatTitle"
+            style="padding:10px; border-bottom:1px solid #333;">
+        </div>
+
+        <div id="messages"
+            style="flex:1; overflow:auto; padding:10px;">
+        </div>
+
+        <div style="display:flex;">
+            <input id="msgInput" style="flex:1;">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
     </div>
+
 </div>
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 

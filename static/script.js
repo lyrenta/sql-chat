@@ -3,72 +3,84 @@ const socket = io();
 let currentUser = null;
 let currentDialog = null;
 
-// AUTH
-function register() {
-    fetch("/register", {
-        method: "POST",
-        body: JSON.stringify({
-            login: login.value,
-            password: password.value
-        })
-    });
-}
-
+// ================= LOGIN =================
 function login() {
     fetch("/login", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            login: login.value,
-            password: password.value
+            login: document.getElementById("login").value,
+            password: document.getElementById("password").value
         })
     })
     .then(r => r.json())
     .then(data => {
-        if (data.user) {
-            currentUser = data.user;
-            document.getElementById("auth").style.display = "none";
-            document.getElementById("app").style.display = "flex";
-            loadUsers();
-        }
+        if (!data.user) return alert("Login failed");
+
+        currentUser = data.user;
+
+        document.getElementById("auth").style.display = "none";
+        document.getElementById("app").style.display = "flex";
+
+        loadUsers(); // 👈 LEFT SIDE USERS
     });
 }
 
-// USERS
+// ================= REGISTER =================
+function register() {
+    fetch("/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            login: document.getElementById("login").value,
+            password: document.getElementById("password").value
+        })
+    }).then(() => login());
+}
+
+// ================= LOAD USERS (LEFT SIDEBAR LIKE DISCORD) =================
 function loadUsers() {
     fetch("/users")
         .then(r => r.json())
         .then(users => {
-            const box = document.getElementById("users");
+            const box = document.getElementById("sidebar");
             box.innerHTML = "";
 
             users.forEach(u => {
                 if (u.id === currentUser.id) return;
 
                 const div = document.createElement("div");
+                div.className = "user";
                 div.innerText = u.login;
-                div.onclick = () => openDialog(u.id);
+
+                div.onclick = () => openChat(u);
+
                 box.appendChild(div);
             });
         });
 }
 
-// DIALOG
-function openDialog(userId) {
+// ================= OPEN OR CREATE DIALOG =================
+function openChat(user) {
     fetch("/dialog", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             user1: currentUser.id,
-            user2: userId
+            user2: user.id
         })
     })
     .then(r => r.json())
     .then(dialog => {
         currentDialog = dialog.id;
+
+        document.getElementById("chatTitle").innerText = user.login;
+
         loadMessages();
     });
 }
 
-// MESSAGES
+// ================= LOAD MESSAGES =================
 function loadMessages() {
     fetch("/messages?dialogId=" + currentDialog)
         .then(r => r.json())
@@ -78,31 +90,46 @@ function loadMessages() {
 
             msgs.forEach(m => {
                 const div = document.createElement("div");
-                div.className = "message";
+
+                const isMe = m.author_id === currentUser.id;
+
+                div.className = isMe ? "msg me" : "msg other";
+
                 div.innerText = m.content;
+
                 box.appendChild(div);
             });
+
+            box.scrollTop = box.scrollHeight;
         });
 }
 
+// ================= SEND MESSAGE =================
 function sendMessage() {
-    const content = msgInput.value;
+    const input = document.getElementById("msgInput");
 
     socket.emit("sendMessage", {
-        content,
+        content: input.value,
         author_id: currentUser.id,
         dialog_id: currentDialog
     });
 
-    msgInput.value = "";
+    input.value = "";
 }
 
-// REALTIME
+// ================= REALTIME =================
 socket.on("newMessage", (msg) => {
-    if (msg.dialog_id === currentDialog) {
-        const div = document.createElement("div");
-        div.className = "message";
-        div.innerText = msg.content;
-        document.getElementById("messages").appendChild(div);
-    }
+    if (msg.dialog_id !== currentDialog) return;
+
+    const box = document.getElementById("messages");
+
+    const div = document.createElement("div");
+
+    const isMe = msg.author_id === currentUser.id;
+
+    div.className = isMe ? "msg me" : "msg other";
+    div.innerText = msg.content;
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 });
