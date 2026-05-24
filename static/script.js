@@ -1,87 +1,108 @@
-const input = document.querySelector("input");
-const button = document.querySelector("button");
-const messagesDiv = document.querySelector(".messagesFromYou");
 const socket = io();
 
-button.addEventListener("click", async () => {
+let currentUser = null;
+let currentDialog = null;
 
-    const message = input.value;
-
-    if (message.trim() === "") return;
-
-    await fetch("/send", {
+// AUTH
+function register() {
+    fetch("/register", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
         body: JSON.stringify({
-            username: "You",
-            message: message
+            login: login.value,
+            password: password.value
         })
     });
-
-    input.value = "";
-
-    loadMessages();
-});
-
-async function loadMessages() {
-
-    try {
-
-        const response = await fetch("/messages");
-
-        if (!response.ok) {
-            throw new Error("Server error");
-        }
-
-        const messages = await response.json();
-
-        messagesDiv.innerHTML = "";
-
-        messages.forEach(msg => {
-
-            const p = document.createElement("p");
-
-            p.textContent = `${msg.username}: ${msg.message}`;
-
-            messagesDiv.appendChild(p);
-        });
-
-    } catch (error) {
-
-        console.log("Error loading messages:", error);
-    }
 }
 
-loadMessages();
-
-setInterval(loadMessages, 1000);
-
-const registerBtn = document.getElementById("registerBtn");
-
-registerBtn.addEventListener("click", async () => {
-
-    const username = document.getElementById("regUsername").value;
-    const password = document.getElementById("regPassword").value;
-
-    if (username === "" || password === "") {
-        alert("Fill all fields");
-        return;
-    }
-
-    const response = await fetch("/register", {
+function login() {
+    fetch("/login", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
         body: JSON.stringify({
-            username,
-            password
+            login: login.value,
+            password: password.value
         })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.user) {
+            currentUser = data.user;
+            document.getElementById("auth").style.display = "none";
+            document.getElementById("app").style.display = "flex";
+            loadUsers();
+        }
+    });
+}
+
+// USERS
+function loadUsers() {
+    fetch("/users")
+        .then(r => r.json())
+        .then(users => {
+            const box = document.getElementById("users");
+            box.innerHTML = "";
+
+            users.forEach(u => {
+                if (u.id === currentUser.id) return;
+
+                const div = document.createElement("div");
+                div.innerText = u.login;
+                div.onclick = () => openDialog(u.id);
+                box.appendChild(div);
+            });
+        });
+}
+
+// DIALOG
+function openDialog(userId) {
+    fetch("/dialog", {
+        method: "POST",
+        body: JSON.stringify({
+            user1: currentUser.id,
+            user2: userId
+        })
+    })
+    .then(r => r.json())
+    .then(dialog => {
+        currentDialog = dialog.id;
+        loadMessages();
+    });
+}
+
+// MESSAGES
+function loadMessages() {
+    fetch("/messages?dialogId=" + currentDialog)
+        .then(r => r.json())
+        .then(msgs => {
+            const box = document.getElementById("messages");
+            box.innerHTML = "";
+
+            msgs.forEach(m => {
+                const div = document.createElement("div");
+                div.className = "message";
+                div.innerText = m.content;
+                box.appendChild(div);
+            });
+        });
+}
+
+function sendMessage() {
+    const content = msgInput.value;
+
+    socket.emit("sendMessage", {
+        content,
+        author_id: currentUser.id,
+        dialog_id: currentDialog
     });
 
-    const text = await response.text();
+    msgInput.value = "";
+}
 
-    alert(text);
+// REALTIME
+socket.on("newMessage", (msg) => {
+    if (msg.dialog_id === currentDialog) {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerText = msg.content;
+        document.getElementById("messages").appendChild(div);
+    }
 });
