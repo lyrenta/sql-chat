@@ -17,7 +17,6 @@ connection.connect();
 const server = http.createServer((req, res) => {
     const parsed = url.parse(req.url, true);
 
-    // ================= STATIC FILES =================
     if (req.url === "/" || req.url === "/index.html") {
         return sendFile(res, "static/index.html", "text/html");
     }
@@ -30,7 +29,6 @@ const server = http.createServer((req, res) => {
         return sendFile(res, "static/script.js", "text/javascript");
     }
 
-    // ================= REGISTER =================
     if (req.url === "/register" && req.method === "POST") {
         return readBody(req, (body) => {
             const { login, password } = JSON.parse(body);
@@ -50,7 +48,6 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // ================= LOGIN =================
     if (req.url === "/login" && req.method === "POST") {
         return readBody(req, (body) => {
             const { login, password } = JSON.parse(body);
@@ -71,7 +68,6 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // ================= USERS =================
     if (req.url === "/users") {
         connection.query(
             "SELECT id, login FROM user",
@@ -83,7 +79,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ================= DIALOGS =================
     if (parsed.pathname === "/dialogs") {
         const userId = parsed.query.userId;
 
@@ -108,7 +103,6 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ================= CREATE / GET DIALOG =================
     if (req.url === "/dialog" && req.method === "POST") {
         return readBody(req, (body) => {
             const { user1, user2 } = JSON.parse(body);
@@ -141,7 +135,6 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // ================= MESSAGES =================
     if (parsed.pathname === "/messages") {
         const dialogId = parsed.query.dialogId;
 
@@ -160,12 +153,10 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ================= 404 =================
     res.writeHead(404);
     res.end("Not found");
 });
 
-// ================= SOCKET.IO =================
 const io = new Server(server);
 
 io.on("connection", (socket) => {
@@ -191,7 +182,6 @@ io.on("connection", (socket) => {
     });
 });
 
-// ================= HELPERS =================
 function sendFile(res, file, type) {
     const filePath = path.join(__dirname, file);
 

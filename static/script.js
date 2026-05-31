@@ -3,7 +3,6 @@ const socket = io();
 let currentUser = null;
 let currentDialog = null;
 
-// ================= LOGIN =================
 function login() {
     fetch("/login", {
         method: "POST",
@@ -22,11 +21,10 @@ function login() {
         document.getElementById("auth").style.display = "none";
         document.getElementById("app").style.display = "flex";
 
-        loadUsers(); // 👈 LEFT SIDE USERS
+        loadUsers();
     });
 }
 
-// ================= REGISTER =================
 function register() {
     fetch("/register", {
         method: "POST",
@@ -38,7 +36,6 @@ function register() {
     }).then(() => login());
 }
 
-// ================= LOAD USERS (LEFT SIDEBAR LIKE DISCORD) =================
 function loadUsers() {
     fetch("/users")
         .then(r => r.json())
@@ -60,7 +57,6 @@ function loadUsers() {
         });
 }
 
-// ================= OPEN OR CREATE DIALOG =================
 function openChat(user) {
     fetch("/dialog", {
         method: "POST",
@@ -80,7 +76,6 @@ function openChat(user) {
     });
 }
 
-// ================= LOAD MESSAGES =================
 function loadMessages() {
     fetch("/messages?dialogId=" + currentDialog)
         .then(r => r.json())
@@ -104,7 +99,6 @@ function loadMessages() {
         });
 }
 
-// ================= SEND MESSAGE =================
 function sendMessage() {
     const input = document.getElementById("msgInput");
 
@@ -117,7 +111,6 @@ function sendMessage() {
     input.value = "";
 }
 
-// ================= REALTIME =================
 socket.on("newMessage", (msg) => {
     if (msg.dialog_id !== currentDialog) return;
 
